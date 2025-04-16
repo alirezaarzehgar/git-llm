@@ -9,7 +9,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-var defaultEditor = "nano"
+var (
+	defaultEditor     = "nano"
+	defaultLlmRetries = 3
+)
 
 func Generate(langModel llm.LanguageModel) error {
 	diff, err := getCachedDiff()
@@ -27,9 +30,15 @@ func Generate(langModel llm.LanguageModel) error {
 		return err
 	}
 
-	err = gitCommit(commitMessage)
-	if err != nil {
-		return err
+	var retry int
+	for retry = 0; retry < defaultLlmRetries; retry++ {
+		err = gitCommit(commitMessage)
+		if err == nil {
+			break
+		}
+	}
+	if retry+1 >= defaultLlmRetries {
+		return fmt.Errorf("LLM timeout: unable to get response from LLM")
 	}
 
 	return nil
