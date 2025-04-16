@@ -17,6 +17,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 
@@ -58,10 +59,24 @@ func init() {
 	viper.AddConfigPath("$HOME/")
 	viper.AddConfigPath("$HOME/.config")
 	viper.AddConfigPath("$HOME/.config/git-llm")
-	viper.AddConfigPath(".")
+
 	err := viper.ReadInConfig()
 	if err != nil {
-		// TODO: CREATE DEFAULT CONFIGURATION
-		panic(fmt.Errorf("fatal error config file: %w", err))
+		fmt.Println("Config file notfound. Generate it for the first time")
+		scnr := bufio.NewScanner(os.Stdin)
+
+		fmt.Print("GROK_API_KEY: ")
+		scnr.Scan()
+		apiKey := scnr.Text()
+
+		fmt.Print("LLM_MODEL: ")
+		scnr.Scan()
+		llmModel := scnr.Text()
+
+		fmt.Print("EDITOR: ")
+		scnr.Scan()
+		editor := scnr.Text()
+
+		setupConfig(apiKey, llmModel, editor)
 	}
 }

@@ -1,3 +1,4 @@
+# copy to ~/.config/git-llm.yaml
 GROK_API_KEY: TOKEN
 LLM_MODEL: llama3-8b-8192
 EDITOR: nano
