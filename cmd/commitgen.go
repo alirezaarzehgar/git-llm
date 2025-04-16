@@ -12,9 +12,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// commitCmd represents the commit command
-var commitCmd = &cobra.Command{
-	Use:   "commit",
+// commitGenCmd represents the commit command
+var commitGenCmd = &cobra.Command{
+	Use:   "commitgen",
 	Short: "generate commit message and open editor",
 	Long: `generate commit message using configured LLM and
 open $EDITOR to change it. Then commit that message.
@@ -29,7 +29,7 @@ EDITOR=vim git llm commit`,
 }
 
 func init() {
-	rootCmd.AddCommand(commitCmd)
+	rootCmd.AddCommand(commitGenCmd)
 
 	// Here you will define your flags and configuration settings.
 
