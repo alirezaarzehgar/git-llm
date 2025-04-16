@@ -29,20 +29,20 @@ func Generate(langModel llm.LanguageModel) error {
 		return fmt.Errorf("failed to connect LLM: %w", err)
 	}
 
-	commitMessage, err = getCommitFromEditor(commitMessage)
-	if err != nil {
-		return err
-	}
-
 	var retry int
 	for retry = 0; retry < defaultLlmRetries; retry++ {
-		err = gitCommit(commitMessage)
+		commitMessage, err = getCommitFromEditor(commitMessage)
 		if err == nil {
 			break
 		}
 	}
 	if retry+1 >= defaultLlmRetries {
 		return fmt.Errorf("LLM timeout: unable to get response from LLM")
+	}
+
+	err = gitCommit(commitMessage)
+	if err != nil {
+		return fmt.Errorf("failed to commit: %w", err)
 	}
 
 	return nil
