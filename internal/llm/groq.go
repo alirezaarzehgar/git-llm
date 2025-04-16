@@ -16,7 +16,7 @@ const (
 
 	GORQ_REQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-	PROMPT = `Anaylyze current git diff --cached output in # DIFF section and decide attributes of an standard git commit.
+	COMMENT_GENERATOR_PROMPT_FORMAT = `Anaylyze current git diff --cached output in # DIFF section and decide attributes of an standard git commit.
 
 Git commits is like this:
 <type>[(scope)]: <description>
@@ -87,14 +87,14 @@ type GorqResponse struct {
 	Choices           []Choice          `json:"choices"`
 }
 
-type Qrok struct {
+type Groq struct {
 }
 
-func (q Qrok) GenerateCommitByDiff(diff string) (string, error) {
+func talkToGroq(prompt string) (*GorqResponse, error) {
 	body := GorqRequest{
 		Messages: []Message{{
 			Role:    MESSAGE_ROLE_USER,
-			Content: fmt.Sprintf(PROMPT, diff),
+			Content: prompt,
 		}},
 		Model:          viper.GetString("LLM_MODEL"),
 		Temperature:    1,
@@ -104,12 +104,12 @@ func (q Qrok) GenerateCommitByDiff(diff string) (string, error) {
 	}
 	commitMessage, err := json.Marshal(body)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal request: %w", err)
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, GORQ_REQ_URL, bytes.NewBuffer(commitMessage))
 	if err != nil {
-		return "", fmt.Errorf("failed to create new request: %w", err)
+		return nil, fmt.Errorf("failed to create new request: %w", err)
 	}
 
 	req.Header.Add("Content-Type", "application/json")
@@ -121,11 +121,20 @@ func (q Qrok) GenerateCommitByDiff(diff string) (string, error) {
 	gorqRes := GorqResponse{}
 	err = json.Unmarshal(resBytes, &gorqRes)
 	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal response: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to do http request: %s", gorqRes.Error.Message)
+		return nil, fmt.Errorf("failed to do http request: %s", gorqRes.Error.Message)
+	}
+
+	return &gorqRes, nil
+}
+
+func (Groq) GenerateCommitByDiff(diff string) (string, error) {
+	gorqRes, err := talkToGroq(fmt.Sprintf(COMMENT_GENERATOR_PROMPT_FORMAT, diff))
+	if err != nil {
+		return "", err
 	}
 
 	cca := CommitContentAttrs{}
@@ -137,4 +146,8 @@ func (q Qrok) GenerateCommitByDiff(diff string) (string, error) {
 	msg := fmt.Sprintf("%s(%s): %s\n\n%s\n", cca.Type, cca.Scope, cca.Description, cca.Body)
 
 	return msg, nil
+}
+
+func (Groq) FixComment(commentMessage string) (string, error) {
+	return "", nil
 }
