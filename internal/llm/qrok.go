@@ -23,12 +23,12 @@ Git commits is like this:
 
 [body]
 
-Don't change following json structure. Commit output should be short:
+Don't change following JSON structure. Commit output should be short:
 {
 	"type": "what the commit does or enhance: fix, feature, doc, refactor",
 	"scope": "basename of folder, all, maint, context of change",
 	"description": "short description to explain what this diff does. Less than 50 characters",
-	"body": "describe all changes for every changed files in diff. Less than 10 lines. Break lines in 100 characters"
+	"body": "describe all changes for every changed files in diff. line lenght limit is 100 characters. body lines number limit is between 3 to 10 lines"
 }
 
 # DIFF
