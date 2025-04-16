@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/alirezaarzehgar/git-llm/internal/commit"
+	"github.com/alirezaarzehgar/git-llm/internal/llm"
 	"github.com/spf13/cobra"
 )
 
@@ -21,8 +22,8 @@ For example:
 
 EDITOR=vim git llm commit`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := commit.Generate(); err != nil {
-			fmt.Fprintln(os.Stderr, "failed to generate commit message:", err)
+		if err := commit.Generate(llm.Qrok{}); err != nil {
+			fmt.Fprintln(os.Stderr, err)
 		}
 	},
 }
