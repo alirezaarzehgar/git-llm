@@ -20,6 +20,10 @@ func Generate(langModel llm.LanguageModel) error {
 		return err
 	}
 
+	if len(diff) == 0 {
+		return fmt.Errorf("no diff. try staging some lines of code using `git add --patch`")
+	}
+
 	commitMessage, err := langModel.GenerateCommitByDiff(diff)
 	if err != nil {
 		return fmt.Errorf("failed to connect LLM: %w", err)
