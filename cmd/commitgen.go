@@ -17,10 +17,10 @@ var commitGenCmd = &cobra.Command{
 	Use:   "commitgen",
 	Short: "generate commit message and open editor",
 	Long: `generate commit message using configured LLM and
-open $EDITOR to change it. Then commit that message.
+open configured EDITOR to change it. Then commit that message.
 For example:
 
-EDITOR=vim git llm commit`,
+git llm commitgen`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := commit.Generate(llm.Qrok{}); err != nil {
 			fmt.Fprintln(os.Stderr, err)
