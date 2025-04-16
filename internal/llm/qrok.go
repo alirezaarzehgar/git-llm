@@ -16,28 +16,32 @@ const (
 
 	GORQ_REQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-	PROMPT = `process DIFF and suggest commit message.
+	PROMPT = `Anaylyze current git diff --cached output in # DIFF section and decide attributes of an standard git commit.
 
+Git commits is like this:
+<type>[(scope)]: <description>
 
-### Output Structure explained
-replace <type> with: feature, fix, docstest
-replace <description> with: short description about commit in less than 50 characters
-replace <body> with: long description about commit if needed between 0 and 8 lines
+[body]
 
-### Requirements:
-- Break long lines
-- Just send plain-text commit message without any extra words/explaintation
-- Strongly comply Output Structure
-- Commit message should be standard
+Don't change following json structure. Commit output should be short:
+{
+	"type": "what the commit does or enhance: fix, feature, doc, refactor",
+	"scope": "basename of folder, all, maint, context of change",
+	"description": "short description to explain what this diff does. Less than 50 characters",
+	"body": "describe all changes for every changed files in diff. Less than 10 lines. Break lines in 100 characters"
+}
 
-### DIFF
+# DIFF
 %s
-
-### Output Structure
-<type>: <description>
-
-body`
+`
 )
+
+type CommitContentAttrs struct {
+	Type        string `json:"type"`
+	Scope       string `json:"scope"`
+	Description string `json:"description"`
+	Body        string `json:"body"`
+}
 
 type ResponseFormat struct {
 	Type string `json:"type"`
@@ -92,10 +96,11 @@ func (q Qrok) GenerateCommitByDiff(diff string) (string, error) {
 			Role:    MESSAGE_ROLE_USER,
 			Content: fmt.Sprintf(PROMPT, diff),
 		}},
-		Model:       viper.GetString("LLM_MODEL"),
-		Temperature: 1,
-		MaxTokens:   1024,
-		TopP:        1,
+		Model:          viper.GetString("LLM_MODEL"),
+		Temperature:    1,
+		MaxTokens:      1024,
+		TopP:           1,
+		ResponseFormat: &ResponseFormat{Type: "json_object"},
 	}
 	commitMessage, err := json.Marshal(body)
 	if err != nil {
@@ -123,5 +128,13 @@ func (q Qrok) GenerateCommitByDiff(diff string) (string, error) {
 		return "", fmt.Errorf("failed to do http request: %s", gorqRes.Error.Message)
 	}
 
-	return gorqRes.Choices[0].Message.Content, nil
+	cca := CommitContentAttrs{}
+	err = json.Unmarshal([]byte(gorqRes.Choices[0].Message.Content), &cca)
+	if err != nil {
+		return "", fmt.Errorf("failed to unmarshal content to valid json: %w", err)
+	}
+
+	msg := fmt.Sprintf("%s(%s): %s\n\n%s\n", cca.Type, cca.Scope, cca.Description, cca.Body)
+
+	return msg, nil
 }
