@@ -16,7 +16,7 @@ const (
 
 	GORQ_REQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-	COMMENT_GENERATOR_PROMPT_FORMAT = `Anaylyze current git diff --cached output in # DIFF section and decide attributes of an standard git commit.
+	PROMPT_FORMAT_GENERATE_COMMIT = `Anaylyze current git diff --cached output in # DIFF section and decide attributes of an standard git commit.
 
 Git commits is like this:
 <type>[(scope)]: <description>
@@ -34,6 +34,19 @@ Don't change following JSON structure. Commit output should be short:
 # DIFF
 %s
 `
+	PROMPT_FORMAT_FIX_COMMIT = `
+Please correct the grammar of the content following the "# TEXT" marker without altering the style,
+structure, or formatting. It is crucial to maintain the original line breaks and not to change the
+size of the text. Only correct grammar mistakes. Don't include "# TEXT" to the message.
+
+Ensure that the output adheres to the following JSON structure:
+{
+	"text": "grammar corrected text"
+}
+
+# TEXT
+%s
+`
 )
 
 type CommitContentAttrs struct {
@@ -41,6 +54,10 @@ type CommitContentAttrs struct {
 	Scope       string `json:"scope"`
 	Description string `json:"description"`
 	Body        string `json:"body"`
+}
+
+type CommitFixedContent struct {
+	Content string `json:"text"`
 }
 
 type ResponseFormat struct {
@@ -132,7 +149,7 @@ func talkToGroq(prompt string) (*GorqResponse, error) {
 }
 
 func (Groq) GenerateCommitByDiff(diff string) (string, error) {
-	gorqRes, err := talkToGroq(fmt.Sprintf(COMMENT_GENERATOR_PROMPT_FORMAT, diff))
+	gorqRes, err := talkToGroq(fmt.Sprintf(PROMPT_FORMAT_GENERATE_COMMIT, diff))
 	if err != nil {
 		return "", err
 	}
@@ -148,6 +165,17 @@ func (Groq) GenerateCommitByDiff(diff string) (string, error) {
 	return msg, nil
 }
 
-func (Groq) FixComment(commentMessage string) (string, error) {
-	return "", nil
+func (Groq) FixCommit(commitMessage string) (string, error) {
+	gorqRes, err := talkToGroq(fmt.Sprintf(PROMPT_FORMAT_FIX_COMMIT, commitMessage))
+	if err != nil {
+		return "", err
+	}
+
+	cfc := CommitFixedContent{}
+	err = json.Unmarshal([]byte(gorqRes.Choices[0].Message.Content), &cfc)
+	if err != nil {
+		return "", fmt.Errorf("failed to unmarshal content to valid json: %w", err)
+	}
+
+	return cfc.Content, nil
 }

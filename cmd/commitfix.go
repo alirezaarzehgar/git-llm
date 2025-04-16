@@ -30,5 +30,5 @@ var commitfixCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(commitfixCmd)
 	commitfixCmd.PersistentFlags().StringVarP(&message, "message", "m", "", "Use the given message as the commit message")
-	commitfixCmd.MarkFlagRequired("message")
+	commitfixCmd.MarkPersistentFlagRequired("message")
 }

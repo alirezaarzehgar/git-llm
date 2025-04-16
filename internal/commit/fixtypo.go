@@ -7,7 +7,7 @@ import (
 )
 
 func FixCommitMessage(langModel llm.LanguageModel, message string) error {
-	commitMessage, err := langModel.FixComment(message)
+	commitMessage, err := langModel.FixCommit(message)
 	if err != nil {
 		return fmt.Errorf("failed to connect LLM: %w", err)
 	}
