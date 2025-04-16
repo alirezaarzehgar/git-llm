@@ -62,6 +62,8 @@ func init() {
 	viper.AddConfigPath("/etc/")
 	viper.AddConfigPath("$HOME/.git-llm")
 	viper.AddConfigPath("$HOME/")
+	viper.AddConfigPath("$HOME/.config")
+	viper.AddConfigPath("$HOME/.config/git-llm")
 	viper.AddConfigPath(".")
 	err := viper.ReadInConfig()
 	if err != nil {
