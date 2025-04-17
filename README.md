@@ -2,6 +2,7 @@
 git-llm is just a simple git subcommand to integrate and use large language models during daily git usages.
 features include fixing grammar of your commits or generating a complete commit from `git diff --cached` output!
 
+Currently we just support Groq API.
 
 # Installation
 ```
@@ -50,4 +51,12 @@ Usage:
 Flags:
   -h, --help             help for commitfix
   -m, --message string   Use the given message as the commit message
+```
+
+# Configuration
+```yaml
+# ~/.config/git-llm.yaml
+editor: vim
+grok_api_key: TOKEN
+llm_model: llama-3.3-70b-versatile
 ```
