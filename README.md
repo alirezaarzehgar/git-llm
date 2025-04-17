@@ -2,7 +2,7 @@
 git-llm is just a simple git subcommand to integrate and use large language models during daily git usages.
 features include fixing grammar of your commits or generating a complete commit from `git diff --cached` output!
 
-Currently we just support Groq API.
+Currently, we only support the Groq API.
 
 # Installation
 ```
