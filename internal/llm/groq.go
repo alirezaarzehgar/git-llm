@@ -16,19 +16,35 @@ const (
 
 	GORQ_REQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-	PROMPT_FORMAT_GENERATE_COMMIT = `Anaylyze current git diff --cached output in # DIFF section and decide attributes of an standard git commit.
+	PROMPT_FORMAT_GENERATE_COMMIT = `Analyze the git diff --cached output in the # DIFF section and generate a standard Git commit.
 
-Git commits is like this:
-<type>[(scope)]: <description>
+The format is: <type>[(scope)]: <description>
 
-[body]
+The output must follow this exact JSON structure. Keep the commit clean, short, and informative.
 
-Don't change following JSON structure. Commit output should be short:
+- type: One of fix, feature, doc, refactor, etc.
+- scope: The basename of the folder, or general context like all, maint, etc.
+- description: A concise summary of the change (max 50 characters).
+- body: Start with a single-line explanation of what the commit does, then itemize the specific changes using - at the beginning of each line.
+
+- Each bullet point should not exceed 100 characters.
+- Total body lines (including the explanation) must be 3 to 10 lines.
+
+# Example:
+
+feature(parser): add support for YAML config
+
+Add YAML parsing support to config loader
+- Introduced yaml.Unmarshal in parser.go
+- Updated config_test.go for YAML cases
+- Adjusted README to document YAML support
+
+Output JSON format:
 {
-	"type": "what the commit does or enhance: fix, feature, doc, refactor",
-	"scope": "basename of folder, all, maint, context of change",
-	"description": "short description to explain what this diff does. Less than 50 characters",
-	"body": "describe all changes for every changed files in diff. line lenght limit is 100 characters. body lines number limit is between 3 to 10 lines"
+  "type": "what the commit does or enhances: fix, feature, doc, refactor",
+  "scope": "basename of folder, all, maint, context of change",
+  "description": "short description of what this diff does (max 50 characters)",
+  "body": "one-line explanation followed by bullet-pointed changes with dashes"
 }
 
 # DIFF
