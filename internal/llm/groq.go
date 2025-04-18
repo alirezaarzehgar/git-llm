@@ -15,54 +15,6 @@ const (
 	MESSAGE_ROLE_ASSISTANT = "assistant"
 
 	GORQ_REQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-
-	PROMPT_FORMAT_GENERATE_COMMIT = `Analyze the git diff --cached output in the # DIFF section and generate a standard Git commit.
-
-The format is: <type>[(scope)]: <description>
-
-The output must follow this exact JSON structure. Keep the commit clean, short, and informative.
-
-- type: One of fix, feature, doc, refactor, etc.
-- scope: The basename of the folder, or general context like all, maint, etc.
-- description: A concise summary of the change (max 50 characters).
-- body: Start with a single-line explanation of what the commit does, then itemize the specific changes using - at the beginning of each line.
-
-- Each bullet point should not exceed 100 characters.
-- Total body lines (including the explanation) must be 3 to 10 lines.
-
-# Example:
-
-feature(parser): add support for YAML config
-
-Add YAML parsing support to config loader
-- Introduced yaml.Unmarshal in parser.go
-- Updated config_test.go for YAML cases
-- Adjusted README to document YAML support
-
-Output JSON format:
-{
-  "type": "what the commit does or enhances: fix, feature, doc, refactor",
-  "scope": "basename of folder, all, maint, context of change",
-  "description": "short description of what this diff does (max 50 characters)",
-  "body": "one-line explanation followed by bullet-pointed changes with dashes"
-}
-
-# DIFF
-%s
-`
-	PROMPT_FORMAT_FIX_COMMIT = `
-Please correct the grammar of the content following the "# TEXT" marker without altering the style,
-structure, or formatting. It is crucial to maintain the original line breaks and not to change the
-size of the text. Only correct grammar mistakes. Don't include "# TEXT" to the message.
-
-Ensure that the output adheres to the following JSON structure:
-{
-	"text": "grammar corrected text"
-}
-
-# TEXT
-%s
-`
 )
 
 type CommitContentAttrs struct {
@@ -165,7 +117,8 @@ func talkToGroq(prompt string) (*GorqResponse, error) {
 }
 
 func (Groq) GenerateCommitByDiff(diff string) (string, error) {
-	gorqRes, err := talkToGroq(fmt.Sprintf(PROMPT_FORMAT_GENERATE_COMMIT, diff))
+	promptFmt := viper.GetString("PROMPT_FORMAT_GENERATE_COMMIT")
+	gorqRes, err := talkToGroq(fmt.Sprintf(promptFmt, diff))
 	if err != nil {
 		return "", err
 	}
@@ -182,7 +135,8 @@ func (Groq) GenerateCommitByDiff(diff string) (string, error) {
 }
 
 func (Groq) FixCommit(commitMessage string) (string, error) {
-	gorqRes, err := talkToGroq(fmt.Sprintf(PROMPT_FORMAT_FIX_COMMIT, commitMessage))
+	promptFmt := viper.GetString("PROMPT_FORMAT_FIX_COMMIT")
+	gorqRes, err := talkToGroq(fmt.Sprintf(promptFmt, commitMessage))
 	if err != nil {
 		return "", err
 	}
