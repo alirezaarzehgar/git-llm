@@ -22,7 +22,7 @@ For example:
 
 git llm commitgen`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := commit.Generate(llm.Groq{}); err != nil {
+		if err := commit.Generate(llm.Groq{}, dontCommitFlag); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
