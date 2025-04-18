@@ -14,7 +14,7 @@ var (
 	defaultLlmRetries = 3
 )
 
-func Generate(langModel llm.LanguageModel) error {
+func Generate(langModel llm.LanguageModel, dontCommit bool) error {
 	diff, err := getCachedDiff()
 	if err != nil {
 		return err
@@ -38,6 +38,11 @@ func Generate(langModel llm.LanguageModel) error {
 	}
 	if retry+1 >= defaultLlmRetries {
 		return fmt.Errorf("LLM timeout: unable to get response from LLM")
+	}
+
+	if dontCommit {
+		fmt.Println(commitMessage)
+		return nil
 	}
 
 	err = gitCommit(commitMessage)
